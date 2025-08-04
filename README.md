@@ -12,6 +12,7 @@ TO USE:
 git clone https://github.com/ethangaul/Spotify-Glove.git
 cd Spotify-Glove
 
+##
 3. Fill in .env files with your credentials
 4. pip install -r requirements.txt
 5. sudo python3 Spotify_app.py
