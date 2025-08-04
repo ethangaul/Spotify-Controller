@@ -11,8 +11,8 @@ app.secret_key = "super secret key"
 # Visit this url to see all the steps, parameters, and expected response.
 
 #  Client Keys
-CLIENT_ID = "8859c95360ce4a56becb63ac10497f71"
-CLIENT_SECRET = "f53a3a42b7054f6a9b3a5279dcb6d8d4"
+CLIENT_ID = "###############################"
+CLIENT_SECRET = "###############################"
 
 # Spotify URLS
 SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
@@ -121,4 +121,5 @@ def getAuthorizationHeader():
 
 
 if __name__ == "__main__":
+
     app.run(debug=True, port=PORT)
