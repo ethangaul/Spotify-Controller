@@ -1,7 +1,6 @@
 import json
 from flask import Flask, request, redirect, session
 import requests
-import json
 from urllib.parse import quote
 
 app = Flask(__name__)
@@ -123,3 +122,4 @@ def getAuthorizationHeader():
 if __name__ == "__main__":
 
     app.run(debug=True, port=PORT)
+
