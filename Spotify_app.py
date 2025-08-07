@@ -1,120 +1,105 @@
 import os
-import requests
-import webbrowser
 import threading
-import time
-from flask import Flask, request, redirect, session
+from flask import Flask, redirect, request, session, jsonify
 from flask_session import Session
+import spotipy
+from spotipy.oauth2 import SpotifyOAuth
+from pynput import keyboard
 from dotenv import load_dotenv
-import keyboard
 
+# Load environment variables
 load_dotenv()
 
-# Flask setup
+# Flask app setup
 app = Flask(__name__)
-app.secret_key = os.getenv("FLASK_SECRET") or "defaultsecret"
-
-# Server-side session setup
-app.config['SESSION_TYPE'] = 'filesystem'
-app.config['SESSION_FILE_DIR'] = '/tmp/flask_session'
-app.config['SESSION_PERMANENT'] = False
+app.config["SECRET_KEY"] = os.urandom(24)
+app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_FILE_DIR"] = "./.flask_session/"
 Session(app)
 
 # Spotify API credentials
-CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
-CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("SPOTIFY_REDIRECT_URI")
+CLIENT_ID = os.getenv("SPOTIPY_CLIENT_ID")
+CLIENT_SECRET = os.getenv("SPOTIPY_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("SPOTIPY_REDIRECT_URI")
 SCOPE = "user-read-playback-state user-modify-playback-state"
 
-# Spotify URLs
-SPOTIFY_AUTH_URL = "https://accounts.spotify.com/authorize"
-SPOTIFY_TOKEN_URL = "https://accounts.spotify.com/api/token"
-SPOTIFY_API_BASE_URL = "https://api.spotify.com/v1"
+# Spotify OAuth object
+sp_oauth = SpotifyOAuth(
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    redirect_uri=REDIRECT_URI,
+    scope=SCOPE
+)
 
-def get_auth_header():
-    if 'access_token' not in session:
-        raise Exception("Access token not in session.")
-    return {"Authorization": f"Bearer {session['access_token']}"}
+# Helper: Get Spotify client from session
+def get_spotify_client():
+    token_info = session.get("token_info", None)
+    if not token_info:
+        return None
+    if sp_oauth.is_token_expired(token_info):
+        token_info = sp_oauth.refresh_access_token(token_info["refresh_token"])
+        session["token_info"] = token_info
+    return spotipy.Spotify(auth=token_info["access_token"])
 
 @app.route("/")
+def index():
+    return redirect("/login")
+
+@app.route("/login")
 def login():
-    auth_url = (
-        f"{SPOTIFY_AUTH_URL}?response_type=code"
-        f"&client_id={CLIENT_ID}&scope={SCOPE}&redirect_uri={REDIRECT_URI}"
-    )
+    auth_url = sp_oauth.get_authorize_url()
     return redirect(auth_url)
 
 @app.route("/callback")
 def callback():
     code = request.args.get("code")
-    if not code:
-        return "Error: Authorization code not provided."
-
-    # Request tokens
-    response = requests.post(
-        SPOTIFY_TOKEN_URL,
-        data={
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": REDIRECT_URI,
-            "client_id": CLIENT_ID,
-            "client_secret": CLIENT_SECRET,
-        },
-    )
-    data = response.json()
-    session["access_token"] = data["access_token"]
-    session["refresh_token"] = data["refresh_token"]
+    token_info = sp_oauth.get_access_token(code)
+    session["token_info"] = token_info
+    print("✅ Authentication successful. You can now control playback via keyboard.")
     return "Authentication successful. You can now control playback via keyboard."
 
-@app.route("/play", methods=["POST"])
-def play_track():
-    try:
-        r = requests.put(f"{SPOTIFY_API_BASE_URL}/me/player/play", headers=get_auth_header())
-        return ("", 204)
-    except Exception as e:
-        print("Error in /play:", e)
-        return ("Error", 500)
+@app.route("/play")
+def play():
+    sp = get_spotify_client()
+    if sp:
+        sp.start_playback()
+        return jsonify({"status": "playing"})
+    return jsonify({"error": "Access token not in session"}), 401
 
-@app.route("/pause", methods=["POST"])
-def pause_track():
-    try:
-        r = requests.put(f"{SPOTIFY_API_BASE_URL}/me/player/pause", headers=get_auth_header())
-        return ("", 204)
-    except Exception as e:
-        print("Error in /pause:", e)
-        return ("Error", 500)
+@app.route("/pause")
+def pause():
+    sp = get_spotify_client()
+    if sp:
+        sp.pause_playback()
+        return jsonify({"status": "paused"})
+    return jsonify({"error": "Access token not in session"}), 401
 
-@app.route("/next", methods=["POST"])
+@app.route("/next")
 def next_track():
+    sp = get_spotify_client()
+    if sp:
+        sp.next_track()
+        return jsonify({"status": "next"})
+    return jsonify({"error": "Access token not in session"}), 401
+
+# Keyboard listener
+def on_press(key):
     try:
-        r = requests.post(f"{SPOTIFY_API_BASE_URL}/me/player/next", headers=get_auth_header())
-        return ("", 204)
-    except Exception as e:
-        print("Error in /next:", e)
-        return ("Error", 500)
+        if key.char == " ":
+            requests.get("http://127.0.0.1:5000/play")
+        elif key.char.lower() == "p":
+            requests.get("http://127.0.0.1:5000/pause")
+        elif key.char.lower() == "n":
+            requests.get("http://127.0.0.1:5000/next")
+    except AttributeError:
+        pass
 
-def open_browser():
-    time.sleep(1)
-    webbrowser.open("http://localhost:5000/")
-
-def key_listener():
-    print("Listening for keys: SPACE = play, P = pause, N = next")
-    while True:
-        try:
-            if keyboard.is_pressed("space"):
-                requests.post("http://localhost:5000/play")
-                time.sleep(0.5)
-            elif keyboard.is_pressed("p"):
-                requests.post("http://localhost:5000/pause")
-                time.sleep(0.5)
-            elif keyboard.is_pressed("n"):
-                requests.post("http://localhost:5000/next")
-                time.sleep(0.5)
-        except:
-            pass
+def start_keyboard_listener():
+    from pynput import keyboard
+    listener = keyboard.Listener(on_press=on_press)
+    listener.start()
 
 if __name__ == "__main__":
-    threading.Thread(target=open_browser).start()
-    threading.Thread(target=key_listener, daemon=True).start()
-    app.run(debug=False)
-
+    import requests
+    threading.Thread(target=start_keyboard_listener, daemon=True).start()
+    app.run(debug=True)
