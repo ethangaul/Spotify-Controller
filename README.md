@@ -11,7 +11,7 @@ TO USE:
 2. Clone the repository
 
   ```bash
-  git clone https://github.com/ethangaul/Spotify-Glove.git
+  git clone https://github.com/ethangaul/Spotify-Glove.git/
   cd Spotify-Glove
   ```
 
