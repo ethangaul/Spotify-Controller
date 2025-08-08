@@ -7,7 +7,7 @@ Control Spotify playback using physical keyboard keys or keyboard emulator (on a
   
 Designed to be used with a keystroke module attached to snowboarding glove
 
-View the progress on my linkedin: [[https://www.linkedin.com/in/ethan-gaul/](https://www.linkedin.com/in/ethan-gaul/details/projects/)]
+View the progress on my LinkedIn! [[https://www.linkedin.com/in/ethan-gaul/](https://www.linkedin.com/in/ethan-gaul/details/projects/)]
 
 TO USE:
 -------
