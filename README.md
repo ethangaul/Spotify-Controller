@@ -23,9 +23,15 @@ TO USE:
   pip install -r requirements.txt
   ```
    
-6. Run the app:
+5. Run the spotify account authentication:
   ```bash
-  sudo python3 Spotify_app.py
+  python3 auth_server.py
+  ```
+
+6. Sign into your Spotify account
+7. Close the auth_server.py and run the key listener:
+  ```bash
+  python3 key_listener.py
   ```
 
 **FREE to use** -- please credit [https://github.com/ethangaul/] for all referencing.
