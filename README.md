@@ -29,3 +29,5 @@ TO USE:
   ```
 
 **FREE to use** -- please credit [https://github.com/ethangaul/] for all referencing.
+
+🎬Video of code application and use: [https://vimeo.com/1108283956?share=copy]
