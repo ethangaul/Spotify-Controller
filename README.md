@@ -1,13 +1,16 @@
-🧤🎵 Spotify Glove 
+🎵 Spotify Controller
 
 Control Spotify playback using physical keyboard keys or keyboard emulator (on a Raspberry Pi):
 - `O` → Play
 - `P` → Pause
 - `N` → Next track
   
-Designed to be used with a keystroke module attached to snowboarding glove.
+Designed to be used with a keystroke module attached to snowboarding glove
+
+View the progress on my linkedin: [https://www.linkedin.com/in/ethan-gaul/]
 
 TO USE:
+-------
 1. Set up Spotify app on Spotify Developer Dashboard [https://developer.spotify.com/dashboard]
 2. Clone the repository
 
