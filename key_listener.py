@@ -55,7 +55,7 @@ def on_press(key):
         if key.char == 'p':
             sp.pause_playback()
             print("Paused playback")
-        elif key.char == ' ':
+        elif key.char == 'o':
             sp.start_playback()
             print("Started playback")
         elif key.char == 'n':
@@ -65,7 +65,7 @@ def on_press(key):
         pass  # Special keys like shift or ctrl ignored
 
 def main():
-    print("Starting key listener: SPACE=play, P=pause, N=next")
+    print("Starting key listener: O=play, P=pause, N=next")
     with keyboard.Listener(on_press=on_press) as listener:
         listener.join()
 
